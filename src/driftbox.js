@@ -2,9 +2,13 @@ export default class Driftbox {
     constructor(container, options = {}) {
         this.container = container;
         this.images = options.images || [];
-        this.current = 0;
+        this.current = 1;
+        this.autoplay = options.autoplay || false;
+        this.interval = options.interval || 3000;
+        this.timer = null;
 
         this.init();
+        if (this.autoplay) this.startAutoplay();
     }
 
     init() {
@@ -54,7 +58,6 @@ export default class Driftbox {
         this.track.appendChild(this.thumb);
         this.container.appendChild(this.track);
 
-        this.current = 1;
         this.update();
 
         this.bindEvents();
@@ -94,6 +97,18 @@ export default class Driftbox {
             }
         }, 310);
     }
+
+    startAutoplay() {
+        this.stopAutoplay();
+        this.timer = setInterval(() => this.next(), this.interval);
+    }
+
+    stopAutoplay() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
 }
 
 class DriftboxElement extends HTMLElement {
@@ -104,7 +119,14 @@ class DriftboxElement extends HTMLElement {
             .map((s) => s.trim())
             .filter(Boolean);
 
-        new Driftbox(this, { images });
+        const autoplay = this.hasAttribute("autoplay");
+        const interval = parseInt(this.getAttribute("interval")) || 3000;
+
+        this.slider = new Driftbox(this, { images, autoplay, interval });
+    }
+
+    disconnectedCallback() {
+        if (this.slider) this.slider.stopAutoplay();
     }
 }
 
