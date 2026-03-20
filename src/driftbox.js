@@ -1,7 +1,6 @@
 export default class Driftbox {
     constructor(container, options = {}) {
         this.container = container;
-        this.images = options.images || [];
         this.current = 1;
         this.autoplay = options.autoplay || false;
         this.interval = options.interval || 3000;
@@ -14,9 +13,6 @@ export default class Driftbox {
     init() {
         this.track = document.createElement("div");
         this.thumb = document.createElement("div");
-
-        this.track.className = "drift-box__track";
-        this.thumb.className = "drift-box__thumb";
 
         Object.assign(this.track.style, {
             width: "100%",
@@ -37,26 +33,29 @@ export default class Driftbox {
             transition: "left 0.3s ease",
         });
 
-        const imagesCloned = [
-            this.images[this.images.length - 1],
-            ...this.images,
-            this.images[0],
-        ];
+        const slides = Array.from(this.container.children);
+        if (slides.length === 0) return;
 
-        imagesCloned.forEach((src) => {
-            const img = document.createElement("img");
-            img.src = src;
-            Object.assign(img.style, {
+        const first = slides[0].cloneNode(true);
+        const last = slides[slides.length - 1].cloneNode(true);
+
+        const slidesCloned = [last, ...slides, first];
+
+        slidesCloned.forEach((el) => {
+            Object.assign(el.style, {
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
                 flexShrink: "0",
+                objectFit: "cover",
             });
-            this.thumb.appendChild(img);
+            this.thumb.appendChild(el);
         });
 
+        this.container.innerHTML = "";
         this.track.appendChild(this.thumb);
         this.container.appendChild(this.track);
+
+        this.total = slides.length;
 
         this.update();
 
@@ -79,7 +78,7 @@ export default class Driftbox {
         this.update();
 
         setTimeout(() => {
-            if (this.current === this.images.length + 1) {
+            if (this.current === this.total + 1) {
                 this.current = 1;
                 this.update(false);
             }
@@ -92,7 +91,7 @@ export default class Driftbox {
 
         setTimeout(() => {
             if (this.current === 0) {
-                this.current = this.images.length;
+                this.current = this.total;
                 this.update(false);
             }
         }, 310);
@@ -113,16 +112,10 @@ export default class Driftbox {
 
 class DriftboxElement extends HTMLElement {
     connectedCallback() {
-        const imagesAttr = this.getAttribute("images") || "";
-        const images = imagesAttr
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-
         const autoplay = this.hasAttribute("autoplay");
         const interval = parseInt(this.getAttribute("interval")) || 3000;
 
-        this.slider = new Driftbox(this, { images, autoplay, interval });
+        this.slider = new Driftbox(this, { autoplay, interval });
     }
 
     disconnectedCallback() {
