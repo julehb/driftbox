@@ -33,7 +33,13 @@ export default class Driftbox {
             transition: "left 0.3s ease",
         });
 
-        this.images.forEach((src) => {
+        const imagesCloned = [
+            this.images[this.images.length - 1],
+            ...this.images,
+            this.images[0],
+        ];
+
+        imagesCloned.forEach((src) => {
             const img = document.createElement("img");
             img.src = src;
             Object.assign(img.style, {
@@ -48,6 +54,9 @@ export default class Driftbox {
         this.track.appendChild(this.thumb);
         this.container.appendChild(this.track);
 
+        this.current = 1;
+        this.update();
+
         this.bindEvents();
     }
 
@@ -57,9 +66,33 @@ export default class Driftbox {
         });
     }
 
-    next() {
-        this.current = (this.current + 1) % this.images.length;
+    update(animate = true) {
+        this.thumb.style.transition = animate ? "left 0.3s ease" : "none";
         this.thumb.style.left = `-${this.current * 100}%`;
+    }
+
+    next() {
+        this.current++;
+        this.update();
+
+        setTimeout(() => {
+            if (this.current === this.images.length + 1) {
+                this.current = 1;
+                this.update(false);
+            }
+        }, 310);
+    }
+
+    prev() {
+        this.current--;
+        this.update();
+
+        setTimeout(() => {
+            if (this.current === 0) {
+                this.current = this.images.length;
+                this.update(false);
+            }
+        }, 310);
     }
 }
 
