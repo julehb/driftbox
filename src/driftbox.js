@@ -4,6 +4,7 @@ export default class Driftbox {
         this.current = 1;
         this.autoplay = options.autoplay || false;
         this.interval = options.interval || 3000;
+        this.pauseOnHover = options.pauseOnHover || false;
         this.timer = null;
 
         this.isDragging = false;
@@ -96,6 +97,15 @@ export default class Driftbox {
         this.track.addEventListener("mousedown", this.startDrag.bind(this));
         window.addEventListener("mousemove", this.onDrag.bind(this));
         window.addEventListener("mouseup", this.endDrag.bind(this));
+
+        if (this.autoplay && this.pauseOnHover) {
+            this.track.addEventListener("mouseenter", () =>
+                this.stopAutoplay(),
+            );
+            this.track.addEventListener("mouseleave", () =>
+                this.startAutoplay(),
+            );
+        }
 
         // Touch
         this.track.addEventListener("touchstart", this.startDrag.bind(this), {
@@ -218,8 +228,9 @@ class DriftboxElement extends HTMLElement {
     connectedCallback() {
         const autoplay = this.hasAttribute("autoplay");
         const interval = parseInt(this.getAttribute("interval")) || 3000;
+        const pauseOnHover = this.hasAttribute("pause-on-hover");
 
-        this.slider = new Driftbox(this, { autoplay, interval });
+        this.slider = new Driftbox(this, { autoplay, interval, pauseOnHover });
     }
 
     disconnectedCallback() {
