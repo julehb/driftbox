@@ -98,7 +98,11 @@ export default class Driftbox {
         window.addEventListener("mousemove", this.onDrag.bind(this));
         window.addEventListener("mouseup", this.endDrag.bind(this));
 
-        if (this.autoplay && this.pauseOnHover) {
+        if (
+            this.pauseOnHover &&
+            this.autoplay &&
+            window.matchMedia("(hover: hover)").matches
+        ) {
             this.track.addEventListener("mouseenter", () =>
                 this.stopAutoplay(),
             );
