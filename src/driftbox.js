@@ -6,6 +6,11 @@ export default class Driftbox {
         this.interval = options.interval || 3000;
         this.timer = null;
 
+        this.isDragging = false;
+        this.startX = 0;
+        this.currentTranslate = 0;
+        this.prevTranslate = 0;
+
         this.init();
         if (this.autoplay) this.startAutoplay();
     }
@@ -33,11 +38,13 @@ export default class Driftbox {
                 transition: left 0.3s ease;
             }
 
-            .drift-box__thumb ::slotted(*) {
+            .drift-box__thumb img {
                 width: 100%;
                 height: 100%;
-                flex-shrink: 0;
                 object-fit: cover;
+                flex-shrink: 0;
+                user-select: none;
+                pointer-events: none;
             }
             `;
 
@@ -85,38 +92,113 @@ export default class Driftbox {
     }
 
     bindEvents() {
-        this.track.addEventListener("click", () => {
-            this.next();
+        // Mouse
+        this.track.addEventListener("mousedown", this.startDrag.bind(this));
+        window.addEventListener("mousemove", this.onDrag.bind(this));
+        window.addEventListener("mouseup", this.endDrag.bind(this));
+
+        // Touch
+        this.track.addEventListener("touchstart", this.startDrag.bind(this), {
+            passive: true,
         });
+        window.addEventListener("touchmove", this.onDrag.bind(this), {
+            passive: true,
+        });
+        window.addEventListener("touchend", this.endDrag.bind(this));
     }
 
-    update(animate = true) {
-        this.thumb.style.transition = animate ? "left 0.3s ease" : "none";
-        this.thumb.style.left = `-${this.current * 100}%`;
+    getPositionX(e) {
+        return e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
     }
 
-    next() {
-        this.current++;
-        this.update();
+    startDrag(e) {
+        this.isDragging = true;
+        this.thumb.style.transition = "none";
+
+        this.startX = this.getPositionX(e);
+
+        if (this.autoplay) this.stopAutoplay();
+    }
+
+    onDrag(e) {
+        if (!this.isDragging) return;
+
+        const currentX = this.getPositionX(e);
+        const delta = currentX - this.startX;
+
+        this.currentTranslate = this.prevTranslate + delta;
+
+        this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
+    }
+
+    endDrag() {
+        if (!this.isDragging) return;
+
+        this.isDragging = false;
+
+        const movedBy = this.currentTranslate - this.prevTranslate;
+
+        if (movedBy < -50) {
+            this.current++;
+        } else if (movedBy > 50) {
+            this.current--;
+        }
+
+        this.snapToSlide();
+
+        if (this.autoplay) this.startAutoplay();
+    }
+
+    snapToSlide() {
+        const width = this.track.offsetWidth;
+
+        this.currentTranslate = -this.current * width;
+        this.prevTranslate = this.currentTranslate;
+
+        this.thumb.style.transition = "transform 0.3s ease";
+        this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
 
         setTimeout(() => {
             if (this.current === this.total + 1) {
                 this.current = 1;
-                this.update(false);
+                this.jumpWithoutAnimation();
+            }
+
+            if (this.current === 0) {
+                this.current = this.total;
+                this.jumpWithoutAnimation();
             }
         }, 310);
     }
 
+    jumpWithoutAnimation() {
+        const width = this.track.offsetWidth;
+
+        this.currentTranslate = -this.current * width;
+        this.prevTranslate = this.currentTranslate;
+
+        this.thumb.style.transition = "none";
+        this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
+    }
+
+    update(animate = true) {
+        const width = this.track.offsetWidth;
+
+        this.currentTranslate = -this.current * width;
+        this.prevTranslate = this.currentTranslate;
+
+        this.thumb.style.transition = animate ? "transform 0.3s ease" : "none";
+        this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
+    }
+
+    next() {
+        this.current++;
+        this.snapToSlide();
+    }
+
     prev() {
         this.current--;
-        this.update();
-
-        setTimeout(() => {
-            if (this.current === 0) {
-                this.current = this.total;
-                this.update(false);
-            }
-        }, 310);
+        this.snapToSlide();
     }
 
     startAutoplay() {
@@ -141,7 +223,15 @@ class DriftboxElement extends HTMLElement {
     }
 
     disconnectedCallback() {
-        if (this.slider) this.slider.stopAutoplay();
+        this.slider?.stopAutoplay();
+    }
+
+    next() {
+        this.slider?.next();
+    }
+
+    prev() {
+        this.slider?.prev();
     }
 }
 
