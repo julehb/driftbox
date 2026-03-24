@@ -33,7 +33,7 @@ export default class Driftbox {
                 height: 100%;
                 overflow: hidden;
                 position: relative;
-                borderRadius: 10px;
+                border-radius: 10px;
             }
 
             .drift-box__thumb {
@@ -43,7 +43,7 @@ export default class Driftbox {
                 left: 0;
                 height: 100%;
                 width: 100%;
-                transition: left 0.3s ease;
+                transition: transform 0.3s ease;
             }
 
             .drift-box__thumb img {
