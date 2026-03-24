@@ -38,7 +38,6 @@ export default class Driftbox {
                 height: 100%;
                 overflow: hidden;
                 position: relative;
-                border-radius: 10px;
             }
 
             .drift-box__thumb {
@@ -69,6 +68,10 @@ export default class Driftbox {
 
         this.track = document.createElement("div");
         this.track.className = "drift-box__track";
+
+        if (this.host.hasAttribute("rounded")) {
+            this.track.style.borderRadius = "12px";
+        }
 
         this.thumb = document.createElement("div");
         this.thumb.className = "drift-box__thumb";
@@ -302,6 +305,10 @@ class DriftboxElement extends HTMLElement {
             pauseOnHover,
             pagination,
         });
+
+        if (this.hasAttribute("rounded")) {
+            this.style.borderRadius = "12px";
+        }
     }
 
     disconnectedCallback() {
