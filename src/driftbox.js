@@ -1,12 +1,19 @@
 export default class Driftbox {
     constructor(host, options = {}) {
         this.host = host;
-        this.current = 1;
+
+        // Options
         this.autoplay = options.autoplay || false;
         this.interval = options.interval || 3000;
         this.pauseOnHover = options.pauseOnHover || false;
+        this.paginationEnabled = options.pagination || false;
+
+        // State
+        this.current = 1;
+        this.total = 0;
         this.timer = null;
 
+        // Drag/Touch
         this.isDragging = false;
         this.startX = 0;
         this.currentTranslate = 0;
@@ -50,9 +57,9 @@ export default class Driftbox {
             `;
 
         this.track = document.createElement("div");
-        this.thumb = document.createElement("div");
-
         this.track.className = "drift-box__track";
+
+        this.thumb = document.createElement("div");
         this.thumb.className = "drift-box__thumb";
 
         this.slot = document.createElement("slot");
@@ -60,6 +67,21 @@ export default class Driftbox {
         this.thumb.appendChild(this.slot);
         this.track.appendChild(this.thumb);
         this.shadow.append(style, this.track);
+
+        if (this.paginationEnabled) {
+            this.pagination = document.createElement("div");
+            this.pagination.className = "drift-box__pagination";
+            Object.assign(this.pagination.style, {
+                position: "absolute",
+                bottom: "10px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                gap: "8px",
+                zIndex: "10",
+            });
+            this.shadow.appendChild(this.pagination);
+        }
 
         this.slot.addEventListener("slotchange", () => {
             this.setupSlides();
@@ -87,6 +109,28 @@ export default class Driftbox {
             });
             this.thumb.appendChild(el);
         });
+
+        if (this.paginationEnabled) {
+            this.pagination.innerHTML = "";
+            for (let i = 0; i < this.total; i++) {
+                const dot = document.createElement("div");
+                Object.assign(dot.style, {
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    background:
+                        i === this.current - 1
+                            ? "#000"
+                            : "rgba(75, 75, 75, 0.5)",
+                    cursor: "pointer",
+                });
+                dot.addEventListener("click", () => {
+                    this.current = i + 1;
+                    this.snapToSlide();
+                });
+                this.pagination.appendChild(dot);
+            }
+        }
 
         this.update(false);
         this.bindEvents();
@@ -123,6 +167,12 @@ export default class Driftbox {
 
     getPositionX(e) {
         return e.type.includes("mouse") ? e.clientX : e.touches[0].clientX;
+    }
+
+    getRealIndex() {
+        if (this.current === 0) return this.total - 1;
+        if (this.current === this.total + 1) return 0;
+        return this.current - 1;
     }
 
     startDrag(e) {
@@ -172,6 +222,14 @@ export default class Driftbox {
         this.thumb.style.transition = "transform 0.3s ease";
         this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
 
+        if (this.paginationEnabled) {
+            const realIndex = this.getRealIndex();
+            Array.from(this.pagination.children).forEach((dot, idx) => {
+                dot.style.background =
+                    idx === realIndex ? "#000" : "rgba(75, 75, 75, 0.5)";
+            });
+        }
+
         setTimeout(() => {
             if (this.current === this.total + 1) {
                 this.current = 1;
@@ -187,20 +245,16 @@ export default class Driftbox {
 
     jumpWithoutAnimation() {
         const width = this.track.offsetWidth;
-
         this.currentTranslate = -this.current * width;
         this.prevTranslate = this.currentTranslate;
-
         this.thumb.style.transition = "none";
         this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
     }
 
     update(animate = true) {
         const width = this.track.offsetWidth;
-
         this.currentTranslate = -this.current * width;
         this.prevTranslate = this.currentTranslate;
-
         this.thumb.style.transition = animate ? "transform 0.3s ease" : "none";
         this.thumb.style.transform = `translateX(${this.currentTranslate}px)`;
     }
@@ -233,8 +287,14 @@ class DriftboxElement extends HTMLElement {
         const autoplay = this.hasAttribute("autoplay");
         const interval = parseInt(this.getAttribute("interval")) || 3000;
         const pauseOnHover = this.hasAttribute("pause-on-hover");
+        const pagination = this.hasAttribute("pagination");
 
-        this.slider = new Driftbox(this, { autoplay, interval, pauseOnHover });
+        this.slider = new Driftbox(this, {
+            autoplay,
+            interval,
+            pauseOnHover,
+            pagination,
+        });
     }
 
     disconnectedCallback() {
