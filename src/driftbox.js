@@ -28,6 +28,10 @@ export default class Driftbox {
 
         const style = document.createElement("style");
         style.textContent = `
+        :host {
+    display: block;
+    position: relative;
+}
             .drift-box__track {
                 width: 100%;
                 height: 100%;
@@ -72,14 +76,12 @@ export default class Driftbox {
             this.pagination = document.createElement("div");
             this.pagination.className = "drift-box__pagination";
             Object.assign(this.pagination.style, {
-                position: "absolute",
-                bottom: "10px",
-                left: "50%",
-                transform: "translateX(-50%)",
                 display: "flex",
+                justifyContent: "center",
                 gap: "8px",
-                zIndex: "10",
+                marginTop: "10px",
             });
+
             this.shadow.appendChild(this.pagination);
         }
 
