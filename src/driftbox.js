@@ -1,6 +1,6 @@
 export default class Driftbox {
-    constructor(container, options = {}) {
-        this.container = container;
+    constructor(host, options = {}) {
+        this.host = host;
         this.current = 1;
         this.autoplay = options.autoplay || false;
         this.interval = options.interval || 3000;
@@ -11,54 +11,76 @@ export default class Driftbox {
     }
 
     init() {
+        this.shadow = this.host.attachShadow({ mode: "open" });
+
+        const style = document.createElement("style");
+        style.textContent = `
+            .drift-box__track {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                position: relative;
+                borderRadius: 10px;
+            }
+
+            .drift-box__thumb {
+                display: flex;
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                transition: left 0.3s ease;
+            }
+
+            .drift-box__thumb ::slotted(*) {
+                width: 100%;
+                height: 100%;
+                flex-shrink: 0;
+                object-fit: cover;
+            }
+            `;
+
         this.track = document.createElement("div");
         this.thumb = document.createElement("div");
 
-        Object.assign(this.track.style, {
-            width: "100%",
-            height: "100%",
-            overflow: "hidden",
-            position: "relative",
-            borderRadius: "10px",
-            // cursor: "pointer",
+        this.track.className = "drift-box__track";
+        this.thumb.className = "drift-box__thumb";
+
+        this.slot = document.createElement("slot");
+
+        this.thumb.appendChild(this.slot);
+        this.track.appendChild(this.thumb);
+        this.shadow.append(style, this.track);
+
+        this.slot.addEventListener("slotchange", () => {
+            this.setupSlides();
         });
+    }
 
-        Object.assign(this.thumb.style, {
-            display: "flex",
-            position: "absolute",
-            top: "0",
-            left: "0",
-            height: "100%",
-            width: "100%",
-            transition: "left 0.3s ease",
-        });
+    setupSlides() {
+        const assigned = this.slot.assignedElements();
 
-        const slides = Array.from(this.container.children);
-        if (slides.length === 0) return;
+        if (assigned.length === 0) return;
 
-        const first = slides[0].cloneNode(true);
-        const last = slides[slides.length - 1].cloneNode(true);
+        this.total = assigned.length;
 
-        const slidesCloned = [last, ...slides, first];
+        const first = assigned[0].cloneNode(true);
+        const last = assigned[assigned.length - 1].cloneNode(true);
 
+        this.thumb.innerHTML = "";
+
+        const slidesCloned = [last, ...assigned, first];
         slidesCloned.forEach((el) => {
             Object.assign(el.style, {
                 width: "100%",
                 height: "100%",
                 flexShrink: "0",
-                objectFit: "cover",
             });
             this.thumb.appendChild(el);
         });
 
-        this.container.innerHTML = "";
-        this.track.appendChild(this.thumb);
-        this.container.appendChild(this.track);
-
-        this.total = slides.length;
-
-        this.update();
-
+        this.update(false);
         this.bindEvents();
     }
 
