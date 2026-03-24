@@ -28,10 +28,11 @@ export default class Driftbox {
 
         const style = document.createElement("style");
         style.textContent = `
-        :host {
-    display: block;
-    position: relative;
-}
+            :host {
+                display: block;
+                position: relative;
+            }
+                
             .drift-box__track {
                 width: 100%;
                 height: 100%;
@@ -46,7 +47,6 @@ export default class Driftbox {
                 top: 0;
                 left: 0;
                 height: 100%;
-                width: 100%;
                 transition: transform 0.3s ease;
             }
 
@@ -58,6 +58,13 @@ export default class Driftbox {
                 user-select: none;
                 pointer-events: none;
             }
+
+            .drift-box__pagination {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-top: 10px;
+            }
             `;
 
         this.track = document.createElement("div");
@@ -67,21 +74,14 @@ export default class Driftbox {
         this.thumb.className = "drift-box__thumb";
 
         this.slot = document.createElement("slot");
+        this.slot.style.display = "none";
 
-        this.thumb.appendChild(this.slot);
         this.track.appendChild(this.thumb);
-        this.shadow.append(style, this.track);
+        this.shadow.append(style, this.track, this.slot);
 
         if (this.paginationEnabled) {
             this.pagination = document.createElement("div");
             this.pagination.className = "drift-box__pagination";
-            Object.assign(this.pagination.style, {
-                display: "flex",
-                justifyContent: "center",
-                gap: "8px",
-                marginTop: "10px",
-            });
-
             this.shadow.appendChild(this.pagination);
         }
 
@@ -92,20 +92,25 @@ export default class Driftbox {
 
     setupSlides() {
         const assigned = this.slot.assignedElements();
-
         if (assigned.length === 0) return;
 
         this.total = assigned.length;
 
-        const first = assigned[0].cloneNode(true);
-        const last = assigned[assigned.length - 1].cloneNode(true);
-
         this.thumb.innerHTML = "";
 
-        const slidesCloned = [last, ...assigned, first];
+        const slidesCloned = [
+            assigned[assigned.length - 1].cloneNode(true),
+            ...assigned.map((el) => el.cloneNode(true)),
+            assigned[0].cloneNode(true),
+        ];
+
+        this.thumb.style.width = `${slidesCloned.length * 100}%`;
+
+        const slideWidth = 100 / slidesCloned.length;
+
         slidesCloned.forEach((el) => {
             Object.assign(el.style, {
-                width: "100%",
+                width: `${slideWidth}%`,
                 height: "100%",
                 flexShrink: "0",
             });
