@@ -30,7 +30,13 @@ export default class Driftbox {
         this.shadow = this.host.attachShadow({ mode: "open" });
 
         const style = document.createElement("style");
-        style.textContent = `    
+        style.textContent = `
+            :host {
+                display: block;
+                position: relative;
+                min-height: 200px;
+            }
+            
             .drift-box__track {
                 width: 100%;
                 height: 100%;
