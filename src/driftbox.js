@@ -31,6 +31,7 @@ export default class Driftbox {
             :host {
                 display: block;
                 position: relative;
+                min-height: 200px;
             }
                 
             .drift-box__track {
@@ -69,8 +70,10 @@ export default class Driftbox {
         this.track = document.createElement("div");
         this.track.className = "drift-box__track";
 
-        if (this.host.hasAttribute("rounded")) {
-            this.track.style.borderRadius = "12px";
+        // receive border-radius from connectedCallback
+        if (this.host._customStyles?.borderRadius) {
+            this.track.style.borderRadius =
+                this.host._customStyles.borderRadius;
         }
 
         this.thumb = document.createElement("div");
@@ -299,20 +302,65 @@ class DriftboxElement extends HTMLElement {
         const pauseOnHover = this.hasAttribute("pause-on-hover");
         const pagination = this.hasAttribute("pagination");
 
+        const styles = this.parseAttributes();
+
+        Object.assign(this.style, {
+            display: "block",
+            width: styles.width || "100%",
+            height: styles.height || "300px",
+            marginLeft: styles.marginLeft || "auto",
+            marginRight: styles.marginRight || "auto",
+        });
+
+        this._customStyles = styles;
+
         this.slider = new Driftbox(this, {
             autoplay,
             interval,
             pauseOnHover,
             pagination,
         });
-
-        if (this.hasAttribute("rounded")) {
-            this.style.borderRadius = "12px";
-        }
     }
 
     disconnectedCallback() {
         this.slider?.stopAutoplay();
+    }
+
+    parseAttributes() {
+        const styles = {};
+
+        // width
+        if (this.hasAttribute("width")) {
+            styles.width = this.getAttribute("width");
+        }
+
+        // height
+        if (this.hasAttribute("height")) {
+            styles.height = this.getAttribute("height");
+        }
+
+        // alignment
+        if (this.hasAttribute("left")) {
+            styles.marginLeft = "0";
+            styles.marginRight = "auto";
+        }
+
+        if (this.hasAttribute("center")) {
+            styles.marginLeft = "auto";
+            styles.marginRight = "auto";
+        }
+
+        if (this.hasAttribute("right")) {
+            styles.marginLeft = "auto";
+            styles.marginRight = "0";
+        }
+
+        // border-radius
+        if (this.hasAttribute("rounded")) {
+            styles.borderRadius = "10px";
+        }
+
+        return styles;
     }
 
     next() {
