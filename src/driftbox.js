@@ -30,13 +30,7 @@ export default class Driftbox {
         this.shadow = this.host.attachShadow({ mode: "open" });
 
         const style = document.createElement("style");
-        style.textContent = `
-            :host {
-                display: block;
-                position: relative;
-                min-height: 200px;
-            }
-                
+        style.textContent = `    
             .drift-box__track {
                 width: 100%;
                 height: 100%;
@@ -329,9 +323,6 @@ class DriftboxElement extends HTMLElement {
         const styles = this.parseAttributes();
 
         Object.assign(this.style, {
-            display: "block",
-            width: styles.width || "100%",
-            height: styles.height || "300px",
             marginLeft: styles.marginLeft || "auto",
             marginRight: styles.marginRight || "auto",
         });
@@ -352,16 +343,6 @@ class DriftboxElement extends HTMLElement {
 
     parseAttributes() {
         const styles = {};
-
-        // width
-        if (this.hasAttribute("width")) {
-            styles.width = this.getAttribute("width");
-        }
-
-        // height
-        if (this.hasAttribute("height")) {
-            styles.height = this.getAttribute("height");
-        }
 
         // alignment
         if (this.hasAttribute("left")) {

@@ -1,0 +1,7 @@
+drift-box {
+    display: block;
+    position: relative;
+    width: 60%;
+    height: 280px;
+    min-height: 200px;
+}
