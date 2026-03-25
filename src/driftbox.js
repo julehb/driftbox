@@ -13,6 +13,9 @@ export default class Driftbox {
         this.total = 0;
         this.timer = null;
 
+        // Resize
+        this.resizeObserver = null;
+
         // Drag/Touch
         this.isDragging = false;
         this.startX = 0;
@@ -48,6 +51,7 @@ export default class Driftbox {
                 left: 0;
                 height: 100%;
                 transition: transform 0.3s ease;
+                will-change: transform;
             }
 
             .drift-box__thumb img {
@@ -65,7 +69,7 @@ export default class Driftbox {
                 gap: 8px;
                 margin-top: 10px;
             }
-            `;
+        `;
 
         this.track = document.createElement("div");
         this.track.className = "drift-box__track";
@@ -101,7 +105,6 @@ export default class Driftbox {
         if (assigned.length === 0) return;
 
         this.total = assigned.length;
-
         this.thumb.innerHTML = "";
 
         const slidesCloned = [
@@ -147,6 +150,19 @@ export default class Driftbox {
 
         this.update(false);
         this.bindEvents();
+        this.initResizeObserver();
+    }
+
+    initResizeObserver() {
+        if (this.resizeObserver) return;
+
+        this.resizeObserver = new ResizeObserver(() => {
+            if (!this.isDragging) {
+                this.update(false);
+            }
+        });
+
+        this.resizeObserver.observe(this.track);
     }
 
     bindEvents() {
@@ -191,7 +207,6 @@ export default class Driftbox {
     startDrag(e) {
         this.isDragging = true;
         this.thumb.style.transition = "none";
-
         this.startX = this.getPositionX(e);
 
         if (this.autoplay) this.stopAutoplay();
@@ -293,6 +308,15 @@ export default class Driftbox {
             this.timer = null;
         }
     }
+
+    destroy() {
+        this.stopAutoplay();
+
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+    }
 }
 
 class DriftboxElement extends HTMLElement {
@@ -323,7 +347,7 @@ class DriftboxElement extends HTMLElement {
     }
 
     disconnectedCallback() {
-        this.slider?.stopAutoplay();
+        this.slider?.destroy();
     }
 
     parseAttributes() {
