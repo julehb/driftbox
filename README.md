@@ -1,6 +1,12 @@
 # Driftbox
 
-A lightweight, atmospheric/ZEN Image Slider. The following options are available as attributes of the HTML `<drift-box>`-Element:
+A lightweight, atmospheric/ZEN Image Slider.
+
+To use, download driftbox.js/style.css and reference both of them in your Template, as seen in index.html (an npm package shall be provided in the future).
+
+For layout styles (such as width and height) and media queries, simply refer to the HTML `<drift-box>`-Element via CSS.
+
+The following options are available as attributes of the HTML `<drift-box>`-Element:
 
 - autoplay  
   Sets Driftbox to autoplay whenever the site is loaded. The interval property can be used to set the slider's speed in milliseconds (e.g. interval="4000"). Default speed is 3 seconds per image.
@@ -15,5 +21,3 @@ A lightweight, atmospheric/ZEN Image Slider. The following options are available
   Makes Driftbox have rounded corners.
 
 Be sure to include either autoplay, or pagination, or both, lest the slider not slide! 😉
-
-For layout styles (such as width and height) and media queries, simply refer to the HTML `<drift-box>`-Element via CSS.
