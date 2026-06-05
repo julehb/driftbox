@@ -21,3 +21,5 @@ The following options are available as attributes of the HTML `<drift-box>`-Elem
   Makes Driftbox have rounded corners.
 
 Be sure to include either autoplay, or pagination, or both, lest the slider not slide! 😉
+
+Don't claim as your own.
